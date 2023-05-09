@@ -25,9 +25,3 @@ model Stats {
   time Json[]
   createdAt DateTime @default(now())
 }
-
-model Log {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
-  user_id String @unique
-  log Json
-}
