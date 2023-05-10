@@ -29,6 +29,12 @@ let currentDate = new Date().toJSON().slice(0, 10);
 const logged_data = new Map();
 
 cron.schedule("* 22 * * *", async () => {
+  const add_stats_to_db = await prisma.stats.create({
+    data: {
+      log: Array.from(logged_data.values()),
+      date: new Date().toLocaleDateString(),
+    },
+  });
   logged_data.clear();
 });
 
@@ -142,39 +148,6 @@ module.exports = {
         );
 
         console.log(logged_data.get(newState.member.user.tag));
-
-        const add_stats_to_db = await prisma.stats.upsert({
-          create: {
-            log: {
-              date: new Date().toLocaleDateString(),
-              logs: logged_data.get(newState.member.user.tag).log,
-            },
-            time: {
-              date: new Date().toLocaleDateString(),
-              total_time: logged_data.get(newState.member.user.tag).worked_time,
-            },
-            user_id: newState.member.user.tag,
-            avatar: newState.member.user.displayAvatarURL({
-              size: 1024,
-              dynamic: true,
-            }),
-          },
-          update: {
-            log: {
-              date: new Date().toLocaleDateString(),
-              logs: logged_data.get(newState.member.user.tag).log,
-            },
-            time: {
-              date: new Date().toLocaleDateString(),
-              total_time: logged_data.get(newState.member.user.tag).worked_time,
-            },
-          },
-          where: {
-            user_id: newState.member.user.tag,
-          },
-        });
-
-        console.log(add_stats_to_db);
       }
       if (
         oldState.channelId != null &&

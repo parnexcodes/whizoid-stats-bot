@@ -19,9 +19,7 @@ datasource db {
 
 model Stats {
   id String @id @default(auto()) @map("_id") @db.ObjectId
-  user_id String @unique
-  avatar String
-  log Json[]
-  time Json[]
+  log Json
+  date String
   createdAt DateTime @default(now())
 }

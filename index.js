@@ -1,5 +1,8 @@
 const fs = require("node:fs");
 const path = require("node:path");
+const cron = require("node-cron");
+const prisma = require("./utils/prisma");
+const { EmbedBuilder } = require("discord.js");
 const {
   Client,
   Collection,
@@ -57,5 +60,38 @@ for (const file of eventFiles) {
     client.on(event.name, (...args) => event.execute(...args));
   }
 }
+
+cron.schedule("5 22 * * *", async () => {
+  const getData = await prisma.stats.findFirst({
+    where: {
+      date: new Date().toLocaleDateString(),
+    },
+  });
+
+  let channel = client.channels.cache.get("1105837319543590912");
+
+  const exampleEmbed = new EmbedBuilder();
+  exampleEmbed.setColor(0x0099ff);
+  exampleEmbed.setTitle("Stats");
+  exampleEmbed.setDescription(`Stats of all users!`);
+  exampleEmbed.addFields({
+    name: "Date",
+    value: "**" + new Date().toLocaleDateString() + "**",
+  });
+  for (const data of getData.log) {
+    exampleEmbed.addFields(
+      { name: "User", value: data.user_id, inline: true },
+      { name: "Total Time", value: data.worked_time, inline: true }
+    );
+  }
+  exampleEmbed.setTimestamp();
+  exampleEmbed.setFooter({
+    text: "Bot made by parnex#4104",
+  });
+
+  await channel.send({
+    embeds: [exampleEmbed],
+  });
+});
 
 client.login(DISCORD_TOKEN);
