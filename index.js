@@ -68,7 +68,7 @@ cron.schedule("5 22 * * *", async () => {
     },
   });
 
-  let channel = client.channels.cache.get("1105837319543590912");
+  let channel = client.channels.cache.get(process.env.LOG_CHANNELID);
 
   const exampleEmbed = new EmbedBuilder();
   exampleEmbed.setColor(0x0099ff);

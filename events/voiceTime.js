@@ -1,6 +1,9 @@
 const { Events } = require("discord.js");
 const cron = require("node-cron");
 const prisma = require("../utils/prisma");
+const dotenv = require("dotenv");
+
+dotenv.config();
 
 function padTo2Digits(num) {
   return num.toString().padStart(2, "0");
@@ -44,7 +47,7 @@ module.exports = {
     // const checkUser = await prisma.user.findFirst({
     //   where: { user_id: newState.member.user.tag },
     // });
-    if (oldState.member.roles.cache.some((role) => role.name == "parnex")) {
+    if (oldState.member.roles.cache.some((role) => role.name == process.env.ALLOWED_ROLE)) {
       logged_data.get(newState.member.user.tag)
         ? null
         : logged_data.set(newState.member.user.tag, {
@@ -95,7 +98,7 @@ module.exports = {
         );
       }
       if (newState.channelId == null) {
-        if (oldState.channelId == "1102984014454861885") {
+        if (oldState.channelId == process.env.INACTIVE_CHANNELID) {
           logged_data.get(newState.member.user.tag).afk_end_time = Date.now();
 
           let updated_time =
@@ -174,14 +177,14 @@ module.exports = {
         );
         if (
           oldState.channelId != null &&
-          newState.channelId == "1102984014454861885"
+          newState.channelId == process.env.INACTIVE_CHANNELID
         ) {
           logged_data.get(newState.member.user.tag).afk_start_time = Date.now();
           // console.log('hello')
         }
         if (
-          oldState.channelId == "1102984014454861885" &&
-          newState.channelId != "1102984014454861885"
+          oldState.channelId == process.env.INACTIVE_CHANNELID &&
+          newState.channelId != process.env.INACTIVE_CHANNELID
         ) {
           logged_data.get(newState.member.user.tag).afk_end_time = Date.now();
           // console.log('hi')
