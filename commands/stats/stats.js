@@ -19,6 +19,12 @@ module.exports = {
         .setRequired(false)
     ),
   async execute(interaction) {
+    let role = interaction.member.roles.cache.find((r) =>
+      JSON.parse(process.env.ADMIN_ROLES).includes(r.name)
+    );
+    if (!role) {
+      return interaction.reply("You're not allowed to use this command!");
+    }
     await interaction.reply("Fetching data from db ...");
     const getData = await prisma.stats.findFirst({
       where: {
@@ -27,6 +33,10 @@ module.exports = {
           : new Date().toLocaleDateString(),
       },
     });
+
+    if (!getData) {
+      return interaction.editReply("No entry found in db!");
+    }
 
     if (interaction.options.getUser("user")) {
       var newArray = getData.log.filter(function (el) {

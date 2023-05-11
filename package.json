@@ -8,7 +8,8 @@
     "discord.js": "^14.10.2",
     "dotenv": "^16.0.3",
     "node-cron": "^3.0.2",
-    "prisma": "^4.13.0"
+    "prisma": "^4.13.0",
+    "winston": "^3.8.2"
   },
   "scripts": {
     "start": "node index.js",

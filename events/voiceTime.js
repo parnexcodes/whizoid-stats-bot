@@ -2,6 +2,7 @@ const { Events } = require("discord.js");
 const cron = require("node-cron");
 const prisma = require("../utils/prisma");
 const dotenv = require("dotenv");
+const logger = require("../utils/winston");
 
 dotenv.config();
 
@@ -47,7 +48,11 @@ module.exports = {
     // const checkUser = await prisma.user.findFirst({
     //   where: { user_id: newState.member.user.tag },
     // });
-    if (oldState.member.roles.cache.some((role) => role.name == process.env.ALLOWED_ROLE)) {
+    if (
+      oldState.member.roles.cache.some(
+        (role) => role.name == process.env.ALLOWED_ROLE
+      )
+    ) {
       logged_data.get(newState.member.user.tag)
         ? null
         : logged_data.set(newState.member.user.tag, {
@@ -93,7 +98,7 @@ module.exports = {
             }`
           );
 
-        console.log(
+        logger.info(
           `${newState.member.user.tag} joined ${newState.channel.name}`
         );
       }
@@ -115,8 +120,8 @@ module.exports = {
 
         let updated_time =
           final_time - logged_data.get(newState.member.user.tag).initial_time;
-        // console.log("updated_time " + convertMsToTime(updated_time))
-        // console.log("total time " + convertMsToTime(total_time))
+        // logger.info("updated_time " + convertMsToTime(updated_time))
+        // logger.info("total time " + convertMsToTime(total_time))
 
         logged_data.get(newState.member.user.tag).total_time =
           logged_data.get(newState.member.user.tag).total_time +
@@ -140,17 +145,17 @@ module.exports = {
           logged_data.get(newState.member.user.tag).total_time
         );
 
-        console.log(
+        logger.info(
           `${newState.member.user.tag} left ${oldState.channel.name}`
         );
 
-        console.log(
-          `${newState.member.user.tag} worked for ${convertMsToTime(
-            logged_data.get(newState.member.user.tag).total_time
-          )}`
-        );
+        // logger.info(
+        //   `${newState.member.user.tag} worked for ${convertMsToTime(
+        //     logged_data.get(newState.member.user.tag).total_time
+        //   )}`
+        // );
 
-        console.log(logged_data.get(newState.member.user.tag));
+        // logger.info(logged_data.get(newState.member.user.tag));
       }
       if (
         oldState.channelId != null &&
@@ -171,8 +176,8 @@ module.exports = {
             }`
           );
         // total_time = total_time + updated_time;
-        // console.log("total time in moved " + convertMsToTime(total_time))
-        console.log(
+        // logger.info("total time in moved " + convertMsToTime(total_time))
+        logger.info(
           `${newState.member.user.tag} moved to ${newState.channel.name}`
         );
         if (
@@ -180,23 +185,23 @@ module.exports = {
           newState.channelId == process.env.INACTIVE_CHANNELID
         ) {
           logged_data.get(newState.member.user.tag).afk_start_time = Date.now();
-          // console.log('hello')
+          // logger.info('hello')
         }
         if (
           oldState.channelId == process.env.INACTIVE_CHANNELID &&
           newState.channelId != process.env.INACTIVE_CHANNELID
         ) {
           logged_data.get(newState.member.user.tag).afk_end_time = Date.now();
-          // console.log('hi')
+          // logger.info('hi')
           let updated_time =
             logged_data.get(newState.member.user.tag).afk_end_time -
             logged_data.get(newState.member.user.tag).afk_start_time;
-          // console.log("afk start " + convertMsToTime(afk_start_time) + "  " + "afk end " + convertMsToTime(afk_end_time))
+          // logger.info("afk start " + convertMsToTime(afk_start_time) + "  " + "afk end " + convertMsToTime(afk_end_time))
           logged_data.get(newState.member.user.tag).total_inactive =
             logged_data.get(newState.member.user.tag).total_inactive +
             updated_time;
-          // console.log("total inactive " + convertMsToTime(total_inactive))
-          // console.log("updated time move " + convertMsToTime(updated_time))
+          // logger.info("total inactive " + convertMsToTime(total_inactive))
+          // logger.info("updated time move " + convertMsToTime(updated_time))
         }
       }
     }
