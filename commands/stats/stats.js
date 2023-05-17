@@ -26,27 +26,28 @@ module.exports = {
       return interaction.reply("You're not allowed to use this command!");
     }
     await interaction.reply("Fetching data from db ...");
-    const getData = await prisma.stats.findFirst({
-      where: {
-        date: interaction.options.getString("date")
-          ? interaction.options.getString("date")
-          : new Date().toLocaleDateString(),
-      },
-    });
-
-    if (!getData) {
-      return interaction.editReply("No entry found in db!");
-    }
 
     if (interaction.options.getUser("user")) {
-      var newArray = getData.log.filter(function (el) {
-        return (
-          el.user_id ==
-          `${interaction.options.getUser("user").username}#${
+      const getData = await prisma.user.findFirst({
+        where: {
+          user_id: `${interaction.options.getUser("user").username}#${
             interaction.options.getUser("user").discriminator
-          }`
-        );
+          }`,
+        },
+        include: {
+          stats: true,
+        },
       });
+
+      const filterDate = getData.stats.filter((e) => {
+        return (e.date = interaction.options.getString("date")
+          ? interaction.options.getString("date")
+          : new Date().toLocaleDateString());
+      });
+
+      if (!getData) {
+        return interaction.editReply("No data found in db!");
+      }
 
       const exampleEmbed = new EmbedBuilder()
         .setColor(0x0099ff)
@@ -55,34 +56,17 @@ module.exports = {
           `Stats of ${interaction.options.getUser("user").username}`
         )
         .addFields(
-          { name: "User", value: newArray[0].user_id },
+          { name: "User", value: getData.user_id },
           {
             name: "Date",
-            value: interaction.options.getString("date")
-              ? interaction.options.getString("date")
-              : new Date().toLocaleDateString(),
+            value: filterDate[0].date,
           },
-          { name: "Total Time", value: newArray[0].worked_time, inline: true }
-        )
-        .addFields(
-          {
-            name: "Join",
-            value: "```json\n" + JSON.stringify(newArray[0].log.join) + "\n```",
-          },
-          {
-            name: "Move",
-            value: "```json\n" + JSON.stringify(newArray[0].log.move) + "\n```",
-          },
-          {
-            name: "Leave",
-            value:
-              "```json\n" + JSON.stringify(newArray[0].log.leave) + "\n```",
-          }
+          { name: "Total Time", value: filterDate[0].total_time, inline: true }
         )
         .setImage(
           `https://cdn.discordapp.com/avatars/${
             interaction.options.getUser("user").id
-          }${interaction.options.getUser("user").avatar}.png`
+          }/${interaction.options.getUser("user").avatar}.png`
         )
         .setTimestamp()
         .setFooter({
@@ -97,18 +81,40 @@ module.exports = {
         embeds: [exampleEmbed],
       });
     } else {
+      const getAllUsersData = await prisma.user.findMany({
+        include: {
+          stats: true,
+        },
+        // orderBy: {
+        //   stats: {
+        //     date: "asc",
+        //   },
+        // },
+        where: {
+          stats: {
+            some: {
+              date: interaction.options.getString("date")
+                ? interaction.options.getString("date")
+                : new Date().toLocaleDateString(),
+            },
+          },
+        },
+      });
+
+      if (getAllUsersData.length == 0) {
+        return interaction.editReply("No data found in db!");
+      }
+
       const exampleEmbed = new EmbedBuilder();
       exampleEmbed.setColor(0x0099ff);
       exampleEmbed.setTitle("Stats");
       exampleEmbed.setDescription(`Stats of all users!`);
-      exampleEmbed.addFields({
-        name: "Date",
-        value: "**" + new Date().toLocaleDateString() + "**",
-      });
-      for (const data of getData.log) {
+
+      for (const data of getAllUsersData) {
         exampleEmbed.addFields(
           { name: "User", value: data.user_id, inline: true },
-          { name: "Total Time", value: data.worked_time, inline: true }
+          { name: "Date", value: data.stats[0].date, inline: true },
+          { name: "Total Time", value: data.stats[0].total_time, inline: true }
         );
       }
       exampleEmbed.setTimestamp();

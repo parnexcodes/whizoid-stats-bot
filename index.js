@@ -62,9 +62,16 @@ for (const file of eventFiles) {
 }
 
 cron.schedule("5 22 * * *", async () => {
-  const getData = await prisma.stats.findFirst({
+  const getAllUsersData = await prisma.user.findMany({
+    include: {
+      stats: true,
+    },
     where: {
-      date: new Date().toLocaleDateString(),
+      stats: {
+        some: {
+          date: new Date().toLocaleDateString(),
+        },
+      },
     },
   });
 
@@ -74,14 +81,12 @@ cron.schedule("5 22 * * *", async () => {
   exampleEmbed.setColor(0x0099ff);
   exampleEmbed.setTitle("Stats");
   exampleEmbed.setDescription(`Stats of all users!`);
-  exampleEmbed.addFields({
-    name: "Date",
-    value: "**" + new Date().toLocaleDateString() + "**",
-  });
-  for (const data of getData.log) {
+
+  for (const data of getAllUsersData) {
     exampleEmbed.addFields(
       { name: "User", value: data.user_id, inline: true },
-      { name: "Total Time", value: data.worked_time, inline: true }
+      { name: "Date", value: data.stats[0].date, inline: true },
+      { name: "Total Time", value: data.stats[0].total_time, inline: true }
     );
   }
   exampleEmbed.setTimestamp();

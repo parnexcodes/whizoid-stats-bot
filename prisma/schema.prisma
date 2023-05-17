@@ -10,16 +10,15 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// model User {
-//   id String @id @default(auto()) @map("_id") @db.ObjectId
-//   user_id String @unique
-//   avatar String
-//   stats Stats?
-// }
+model User {
+  id      String  @id @default(auto()) @map("_id") @db.ObjectId
+  user_id String? @unique
+  stats   Stats[]
+}
 
 model Stats {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
-  log Json
-  date String
-  createdAt DateTime @default(now())
+  id         String  @id @default(auto()) @map("_id") @db.ObjectId
+  total_time String?
+  date       String?
+  user       User    @relation(fields: [id], references: [id])
 }
