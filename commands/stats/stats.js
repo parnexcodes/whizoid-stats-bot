@@ -39,11 +39,13 @@ module.exports = {
         },
       });
 
-      const filterDate = getData.stats.filter((e) => {
-        return (e.date = interaction.options.getString("date")
-          ? interaction.options.getString("date")
-          : new Date().toLocaleDateString());
-      });
+      const filterDate = getData.stats.filter(
+        (e) => e.date == interaction.options.getString("date")
+      );
+
+      if (filterDate.length == 0) {
+        return interaction.editReply(`No data found in db for ${interaction.options.getString("date")}!`);
+      }
 
       if (!getData) {
         return interaction.editReply("No data found in db!");
@@ -59,9 +61,19 @@ module.exports = {
           { name: "User", value: getData.user_id },
           {
             name: "Date",
-            value: filterDate[0].date,
+            value:
+              filterDate.length > 0
+                ? filterDate[0].date
+                : getData.stats[0].date,
           },
-          { name: "Total Time", value: filterDate[0].total_time, inline: true }
+          {
+            name: "Total Time",
+            value:
+              filterDate.length > 0
+                ? filterDate[0].total_time
+                : getData.stats[0].total_time,
+            inline: true,
+          }
         )
         .setImage(
           `https://cdn.discordapp.com/avatars/${

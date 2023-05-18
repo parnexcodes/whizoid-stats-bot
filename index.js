@@ -75,6 +75,34 @@ cron.schedule("5 22 * * *", async () => {
     },
   });
 
+  cron.schedule("10 22 * * *", async () => {
+    const guild = client.guilds.cache.get("639085571029073936");
+    const roleId = "1018810863198674976";
+
+    logger.info('Refreshing User list.')
+    let res = await guild.members.fetch().then((members) => {
+      members
+        .filter((mmbr) => mmbr.roles.cache.get(roleId))
+        .map(async (m) => {
+          const createUser = await prisma.user.upsert({
+            create: {
+              user_id: m.user.tag
+            },
+            update: {
+              user_id: m.user.tag
+            },
+            where: {
+              user_id: m.user.tag
+            },
+            select: {
+              _count: true
+            }
+          })
+        });
+    });
+    logger.info(`Refreshed!`);
+  })
+
   let channel = client.channels.cache.get(process.env.LOG_CHANNELID);
 
   const exampleEmbed = new EmbedBuilder();

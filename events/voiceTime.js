@@ -30,6 +30,8 @@ function convertMsToTime(milliseconds) {
 }
 let currentDate = new Date().toJSON().slice(0, 10);
 
+let bot_start_time = Date.now();
+
 const logged_data = new Map();
 
 cron.schedule("* 22 * * *", async () => {
@@ -39,19 +41,13 @@ cron.schedule("* 22 * * *", async () => {
 module.exports = {
   name: Events.VoiceStateUpdate,
   async execute(oldState, newState) {
-    const checkUser = await prisma.user.findFirst({
+    const checkUserAllowed = await prisma.user.findFirst({
       where: { user_id: newState.member.user.tag },
       include: {
         stats: true,
       },
     });
-    // console.log(checkUser);
-    const checkStat = await prisma.stats.findFirst({
-      where: {
-        date: new Date().toLocaleDateString(),
-      },
-    });
-    if (checkUser) {
+    if (checkUserAllowed) {
       if (
         oldState.member.roles.cache.find((r) =>
           JSON.parse(process.env.ALLOWED_ROLE).includes(r.name)
@@ -66,7 +62,7 @@ module.exports = {
                 leave: [],
                 move: [],
               },
-              initial_time: 0,
+              initial_time: bot_start_time,
               join_vc_time: 0,
               leave_vc_time: 0,
               total_time: 0,
@@ -75,17 +71,25 @@ module.exports = {
               total_inactive: 0,
               move_vc_time: 0,
               worked_time: null,
+              checkStat: null,
+              checkUser: null,
             });
-        // let {
-        //   initial_time,
-        //   join_vc_time,
-        //   leave_vc_time,
-        //   total_time,
-        //   afk_start_time,
-        //   afk_end_time,
-        //   total_inactive,
-        //   move_vc_time,
-        // } = logged_data.get(newState.member.user.tag);
+
+        const checkUser = await prisma.user.findFirst({
+          where: { user_id: newState.member.user.tag },
+          include: {
+            stats: true,
+          },
+        });
+        logged_data.get(newState.member.user.tag).checkUser = checkUser;
+
+        const checkStat = await prisma.stats.findFirst({
+          where: {
+            date: new Date().toLocaleDateString(),
+          },
+        });
+        logged_data.get(newState.member.user.tag).checkStat = checkStat;
+
         if (oldState.channelId == null) {
           logged_data.get(newState.member.user.tag).initial_time = Date.now();
 
@@ -154,50 +158,49 @@ module.exports = {
             `${newState.member.user.tag} left ${oldState.channel.name}`
           );
 
-          console.log(
+          logger.info(
             `${newState.member.user.tag} worked for ${convertMsToTime(
               logged_data.get(newState.member.user.tag).total_time
             )}`
           );
 
           if (
-            checkStat == null &&
-            (checkUser.stats == null ||
-              checkUser.stats.date != new Date().toLocaleDateString())
+            logged_data.get(oldState.member.user.tag).checkUser.stats.length ==
+              0 ||
+            logged_data.get(oldState.member.user.tag).checkUser.stats[0].date !=
+              new Date().toLocaleDateString()
           ) {
             const statsCreate = await prisma.stats.create({
               data: {
                 date: new Date().toLocaleDateString(),
-                total_time: logged_data.get(newState.member.user.tag)
+                total_time: logged_data.get(oldState.member.user.tag)
                   .worked_time,
                 user: {
                   connect: {
-                    id: checkUser.id,
+                    id: logged_data.get(oldState.member.user.tag).checkUser.id,
                   },
                 },
               },
             });
-            // console.log("upper");
-          } else {
+          }
+          try {
             const add_stats = await prisma.stats.update({
               data: {
-                total_time: logged_data.get(newState.member.user.tag)
+                total_time: logged_data.get(oldState.member.user.tag)
                   .worked_time,
-                date: new Date().toLocaleDateString(),
                 user: {
                   connect: {
-                    id: checkUser.id,
+                    id: logged_data.get(oldState.member.user.tag).checkUser.id,
                   },
                 },
               },
               where: {
-                id: checkStat.id,
+                id: logged_data.get(oldState.member.user.tag).checkStat.id,
               },
-            });
-            // console.log("lower");
+            });            
+          } catch (error) {
+            logger.error(error)
           }
-
-          // console.log(logged_data.get(newState.member.user.tag));
         }
         if (
           oldState.channelId != null &&
