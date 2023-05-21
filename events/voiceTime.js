@@ -1,3 +1,5 @@
+/** @format */
+
 const { Events } = require("discord.js");
 const cron = require("node-cron");
 const prisma = require("../utils/prisma");
@@ -165,25 +167,26 @@ module.exports = {
           );
 
           if (
-            logged_data.get(newState.member.user.tag).checkUser.stats.length ==
+            logged_data.get(oldState.member.user.tag).checkUser.stats.length ==
               0 ||
-            logged_data.get(newState.member.user.tag).checkUser.stats[0].date !=
+            logged_data.get(oldState.member.user.tag).checkUser.stats[0].date !=
               new Date().toLocaleDateString()
           ) {
             const statsCreate = await prisma.stats.create({
               data: {
                 date: new Date().toLocaleDateString(),
-                total_time: logged_data.get(newState.member.user.tag)
+                total_time: logged_data.get(oldState.member.user.tag)
                   .worked_time,
                 user: {
                   connect: {
-                    id: logged_data.get(newState.member.user.tag).checkUser.id,
+                    id: logged_data.get(oldState.member.user.tag).checkUser.id,
                   },
                 },
               },
             });
           }
           try {
+            console.log(logged_data.get(newState.member.user.tag).checkUser)
             const add_stats = await prisma.stats.update({
               data: {
                 total_time: logged_data.get(newState.member.user.tag)
