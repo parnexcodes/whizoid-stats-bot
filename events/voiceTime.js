@@ -195,7 +195,7 @@ module.exports = {
                 },
               },
               where: {
-                id: logged_data.get(newState.member.user.tag).checkStat.id,
+                id: logged_data.get(newState.member.user.tag).checkUser.stats[0].id,
               },
             });            
           } catch (error) {
