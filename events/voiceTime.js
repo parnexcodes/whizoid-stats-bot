@@ -165,19 +165,19 @@ module.exports = {
           );
 
           if (
-            logged_data.get(newState.member.user.tag).checkUser.stats.length ==
+            logged_data.get(oldState.member.user.tag).checkUser.stats.length ==
               0 ||
-            logged_data.get(newState.member.user.tag).checkUser.stats[0].date !=
+            logged_data.get(oldState.member.user.tag).checkUser.stats[0].date !=
               new Date().toLocaleDateString()
           ) {
             const statsCreate = await prisma.stats.create({
               data: {
                 date: new Date().toLocaleDateString(),
-                total_time: logged_data.get(newState.member.user.tag)
+                total_time: logged_data.get(oldState.member.user.tag)
                   .worked_time,
                 user: {
                   connect: {
-                    id: logged_data.get(newState.member.user.tag).checkUser.id,
+                    id: logged_data.get(oldState.member.user.tag).checkUser.id,
                   },
                 },
               },
@@ -186,16 +186,16 @@ module.exports = {
           try {
             const add_stats = await prisma.stats.update({
               data: {
-                total_time: logged_data.get(newState.member.user.tag)
+                total_time: logged_data.get(oldState.member.user.tag)
                   .worked_time,
                 user: {
                   connect: {
-                    id: logged_data.get(newState.member.user.tag).checkUser.id,
+                    id: logged_data.get(oldState.member.user.tag).checkUser.id,
                   },
                 },
               },
               where: {
-                id: logged_data.get(newState.member.user.tag).checkStat.id,
+                id: logged_data.get(oldState.member.user.tag).checkStat.id,
               },
             });            
           } catch (error) {
