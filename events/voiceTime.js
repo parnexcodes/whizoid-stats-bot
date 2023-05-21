@@ -182,7 +182,6 @@ module.exports = {
             });
           }
           try {
-            console.log(logged_data.get(newState.member.user.tag).checkUser)
             const add_stats = await prisma.stats.update({
               data: {
                 total_time: logged_data.get(newState.member.user.tag)
